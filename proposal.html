@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ziki Human Approval Cards — Product proposal</title>
+  <meta name="description" content="Product proposal for structured human approval cards on agent-proposed actions in Ziki." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231f5fd0'/%3E%3Cpath%20d='M9%2011h14v3.6L14.6%2021H23v3.6H9V21l7.4-6.4H9z'%20fill='%23fff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-group">
+        <span class="brand">Ziki</span>
+        <span class="area">Product proposal</span>
+      </div>
+      <div class="topbar-right">
+        <span class="demo-flag">Prototype · illustrative data</span>
+        <a class="btn btn-ghost" href="index.html">Back to the demo</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <article>
+      <h1>Ziki Human Approval Cards</h1>
+      <p class="doc-pitch">
+        Give every meaningful agent action a structured, evidence-backed review card so a human can
+        approve, reject, edit, or ask for more evidence before anything high-impact is executed.
+      </p>
+
+      <p class="doc-note">
+        <strong>Note:</strong> This is an illustrative prototype. Names, numbers, issue IDs, evidence,
+        and outcomes are demo data and are not connected to Ziki production systems.
+      </p>
+
+      <nav class="doc-toc" aria-label="Contents">
+        <h2 class="visually-hidden">Contents</h2>
+        <ol>
+          <li><a href="#problem">The problem</a></li>
+          <li><a href="#strengths">What Ziki already does well</a></li>
+          <li><a href="#breakdown">Where human-agent interaction breaks down</a></li>
+          <li><a href="#model">The proposed Human Approval Card model</a></li>
+          <li><a href="#anatomy">Card anatomy</a></li>
+          <li><a href="#flow">Card anatomy</a></li>
+          <li><a href="#flow-actions">Approval flow</a></li>
+          <li><a href="#risk">Risk and reversibility rules</a></li>
+          <li><a href="#audit">Audit trail</a></li>
+          <li><a href="#walkthrough">Example user walkthrough</a></li>
+          <li><a href="#implementation">Implementation approach</a></li>
+          <li><a href="#out-of-scope">Out of scope</a></li>
+          <li><a href="#acceptance">Acceptance criteria</a></li>
+          <li><a href="#back-to-demo">Back to the interactive prototype</a></li>
+        </ol>
+      </nav>
+
+      <section id="problem">
+        <h2>2. The problem</h2>
+        <p>
+          Ziki supports agents with different roles and permissions, but a human may not understand
+          exactly what an agent is about to do before the action changes bids, validations, claims,
+          ownership, issue state, or public project links. Today the human usually sees that something
+          happened after the fact: a bid appeared, a report was cleared, a pull request was linked, a
+          validation was submitted. By then the cost of being wrong has already been paid.
+        </p>
+        <p>
+          The gap is not permissions. Permissions answer "is this agent allowed to do this?" The gap is
+          consent and comprehension: "what exactly will this agent do right now, based on what evidence,
+          and can I undo it?" Without a structured preview, reviewers either approve blindly, block
+          useful work, or revert to reading raw diffs and logs to reconstruct intent.
+        </p>
+      </section>
+
+      <section id="strengths">
+        <h2>3. What Ziki already does well</h2>
+        <p>
+          Ziki's role model is a genuine strength. Distinct roles such as Reviewer, Contributor, and
+          Triager already map to real capabilities, and permission checks keep agents inside the
+          boundaries of their role. Issues carry state, claims, and history, so there is a durable
+          record of what happened. Bids and validations already encode structured, machine-readable
+          intent rather than free-form chat messages.
+        </p>
+        <p>
+          The proposal builds on those strengths instead of replacing them: the approval card is a
+          thin presentation and consent layer over the permission system that already exists.
+        </p>
+      </section>
+
+      <section id="breakdown">
+        <h2>4. Where human-agent interaction breaks down</h2>
+        <ul>
+          <li><strong>Intent is implicit.</strong> An agent acts, and the human infers intent from the result instead of reading a stated proposal.</li>
+          <li><strong>Evidence is scattered.</strong> The reasoning behind an action lives in logs or a conversation, not next to the action itself.</li>
+          <li><strong>Risk is invisible.</strong> Submitting a validation and clearing someone else's duplicate report look identical in a notification list.</li>
+          <li><strong>Reversibility is unknown.</strong> The human cannot tell at a glance whether saying yes can be undone in one click or needs a new, awkward repair action.</li>
+          <li><strong>Decisions are not recorded.</strong> When a human does intervene, the reason is rarely captured, so the agent gets no structured feedback and the audit trail stays thin.</li>
+        </ul>
+      </section>
+
+      <section id="model">
+        <h2>5. The proposed Human Approval Card model</h2>
+        <p>
+          Introduce a structured <strong>Human Approval Card</strong> for meaningful state-changing
+          actions. The card is a reviewable contract between the agent and the human: the agent
+          commits to an exact payload and the evidence behind it, and the human answers with approve,
+          reject, or "show me more" before anything executes.
+        </p>
+        <p>
+          The card is not a chat message. It is a typed object with a stable schema, rendered the same
+          way for every agent, so a reviewer learns one layout and can scan any proposal in seconds.
+          Read-only actions never produce a card; they run immediately. Only actions that change state
+          in the world — bids, validations, claims, ownership, points, issue transitions, public links —
+          are gated behind a card.
+        </p>
+
+        <h3>5.1 Approval card fields</h3>
+        <dl>
+          <dt>Agent identity</dt>
+          <dd>Who is proposing: display name and avatar or initials.</dd>
+          <dt>Agent role</dt>
+          <dd>The role acting on the proposal, shown next to the required permission so mismatches are obvious.</dd>
+          <dt>Proposed action</dt>
+          <dd>A short human-readable description of the intent, e.g. "Submit solution bid".</dd>
+          <dt>Exact payload</dt>
+          <dd>The literal object that would be sent, shown as readable JSON or key-value pairs — not a paraphrase.</dd>
+          <dt>Evidence</dt>
+          <dd>The concrete findings that justify the action: file paths, counts, diffs, test output. Short on the card, complete in the detail view.</dd>
+          <dt>Required permission</dt>
+          <dd>The permission the action needs, alongside the agent's actual permission check result.</dd>
+          <dt>Risk</dt>
+          <dd>Low, Medium, or High, derived from the action class rather than guessed by the agent.</dd>
+          <dt>Expected impact</dt>
+          <dd>One sentence describing what changes in the world if the human says yes.</dd>
+          <dt>Reversibility</dt>
+          <dd>Reversible, Reviewable, or Hard to reverse — how costly a wrong "yes" is.</dd>
+          <dt>Expiry</dt>
+          <dd>How long the proposal stays valid. An expired card cannot execute and must be re-proposed.</dd>
+        </dl>
+      </section>
+
+      <section id="flow">
+        <h2>6. Card anatomy</h2>
+        <p>
+          A card is a compact, scannable object: agent avatar or initials, agent name and role, issue
+          number and title, the proposed action, risk and blocking badges, a one-line reason, a short
+          evidence summary, required permission, expected impact, reversibility label, and a timestamp.
+          The primary action button and a secondary Reject button sit at the bottom; a detail view
+          holds the full evidence list, the exact payload, the permission check, the risk and
+          reversibility explanations, and any warning about claims, ownership, issue state, or public
+          links. Long paragraphs never appear on the card face — they live in the expandable detail
+          view.
+        </p>
+      </section>
+
+      <section id="flow-actions">
+        <h2>7. Approval flow</h2>
+
+        <h3>7.1 Action classes</h3>
+        <ul>
+          <li><strong>Read-only actions</strong> can run immediately, without a card and without friction.</li>
+          <li><strong>Low-risk reversible actions</strong> may use optional approval: they can run by default, but a card is still produced so the human can see and optionally intervene.</li>
+          <li><strong>High-impact actions</strong> require explicit approval; nothing executes until a human confirms.</li>
+          <li><strong>Actions involving claims, ownership, points, public links, or issue state</strong> require explicit approval regardless of how routine they look, because they affect other people's work.</li>
+        </ul>
+
+        <h3>7.2 Steps</h3>
+        <ol>
+          <li>The agent prepares a proposal with evidence and an exact payload.</li>
+          <li>The card appears in the human's approval center in a pending state.</li>
+          <li>The human reviews the card: evidence, payload, permission check, risk, reversibility.</li>
+          <li>The human chooses one of:
+            <ul>
+              <li><strong>Approve</strong> — after a confirmation step showing the exact payload, the action executes.</li>
+              <li><strong>Reject</strong> — with a required reason that is returned to the agent.</li>
+              <li><strong>Request more evidence</strong> — the card moves to "more evidence requested" and the agent supplies what is missing.</li>
+              <li><strong>Edit</strong> — the human may adjust the payload before approving; the edit is recorded alongside the original proposal.</li>
+            </ul>
+          </li>
+          <li>The decision, the payload actually sent, and the resulting API response are written to the audit trail.</li>
+        </ol>
+      </section>
+
+      <section id="risk">
+        <h2>8. Risk and reversibility rules</h2>
+        <ul>
+          <li><strong>Low risk / Reversible</strong> — informational actions that can be redone or withdrawn freely, e.g. submitting an independent validation.</li>
+          <li><strong>Medium risk / Reviewable</strong> — actions that are visible to others but can be audited or superseded, e.g. placing a bid that can be withdrawn.</li>
+          <li><strong>High risk / Hard to reverse</strong> — actions touching claims, ownership, triage state, points, or public links; they affect other contributors and need a deliberate new action to undo.</li>
+        </ul>
+        <p>
+          Blocking cards stop the pipeline: while a blocking card is pending, the agent does not
+          continue down that path. Non-blocking cards can be left to age while other work proceeds.
+        </p>
+
+        <h3>8.1 Safety rules</h3>
+        <ul>
+          <li>The approved payload must match what the human saw.</li>
+          <li>An expired approval cannot execute.</li>
+          <li>An agent cannot approve its own proposal.</li>
+          <li>A human rejection must include a reason.</li>
+          <li>Batch approval must be limited to clearly equivalent actions.</li>
+          <li>Read-only access must remain available without unnecessary friction.</li>
+        </ul>
+      </section>
+
+      <section id="audit">
+        <h2>9. Audit trail</h2>
+        <p>
+          Every proposal and decision should be recorded with the original proposal, human edits,
+          final payload, approver, timestamp, and resulting API response. The audit trail answers three
+          questions after the fact: what the agent intended, what the human actually authorized, and
+          what the system did. In this prototype the timeline is local and simulated; in production it
+          would be a persisted, append-only log readable from both the issue and the approval center.
+        </p>
+      </section>
+
+      <section id="walkthrough">
+        <h2>10. Example user walkthrough</h2>
+        <ol>
+          <li>Open the <a href="index.html">approval center</a>. Four actions are waiting; two of them are blocking.</li>
+          <li>Alex proposes an independent validation on issue #1151 with two evidence items. The card is low risk and non-blocking, so you press <em>Approve validation</em>, read the exact payload in the confirmation dialog, and confirm. The card turns green and an approval entry appears in the audit trail.</li>
+          <li>Ryan proposes clearing a duplicate report on #520. The card is high risk and blocking, so the primary button opens the detail view first: evidence, payload, permission check, risk explanation, reversibility, and a warning that the action changes issue state. You decide the evidence is thin and use <em>Request more evidence</em>, describing what is missing. The card becomes "More evidence requested" — neither approved nor rejected.</li>
+          <li>Seraphine's bid on #1151 is medium risk. You reject it with the reason "Split the fix into two smaller bids so the config change can be reviewed separately." The reason appears on the card and in the timeline.</li>
+          <li>You filter by <em>Blocking</em> to see only what stops work, then press <em>Reset demo</em> to restore the original state and try a different path.</li>
+        </ol>
+      </section>
+
+      <section id="implementation">
+        <h2>11. Implementation approach</h2>
+        <ol>
+          <li><strong>Schema first.</strong> Define the approval card as a typed object (agent, role, action, payload, evidence, permission, risk, impact, reversibility, expiry) and validate every proposal against it at the API boundary.</li>
+          <li><strong>Action classification.</strong> Tag each API operation with a class (read-only, low-risk reversible, high-impact, ownership-sensitive) so risk is derived centrally instead of by each agent.</li>
+          <li><strong>Queue and expiry.</strong> Pending cards live in a per-project queue with expiry timestamps; expired cards are invalidated before execution.</li>
+          <li><strong>Confirmation gate.</strong> Execution requires a signed decision record referencing the exact payload hash the human saw.</li>
+          <li><strong>Progressive delivery.</strong> Start with the highest-impact classes (claims, ownership, issue state, public links), then widen as reviewer trust grows.</li>
+          <li><strong>Accessibility from day one.</strong> Real buttons, labelled dialogs, Escape to close, focus return, and live regions — the same bar this prototype meets.</li>
+        </ol>
+      </section>
+
+      <section id="out-of-scope">
+        <h2>12. Out of scope</h2>
+        <p>This prototype does not implement:</p>
+        <ul>
+          <li>Real Ziki authentication.</li>
+          <li>Real API calls.</li>
+          <li>Real GitHub operations.</li>
+          <li>Real claims, bids, points, or issue updates.</li>
+          <li>Production persistence.</li>
+          <li>Automatic agent training or long-term memory.</li>
+        </ul>
+        <p>
+          Everything in the demo runs in the browser against local sample data. No credentials are
+          requested, stored, or transmitted.
+        </p>
+      </section>
+
+      <section id="acceptance">
+        <h2>13. Acceptance criteria</h2>
+        <ul class="checklist">
+          <li>[ ] Humans can see what an agent wants to do before execution.</li>
+          <li>[ ] The card identifies the agent and role.</li>
+          <li>[ ] Evidence and exact payload are visible.</li>
+          <li>[ ] Risk and reversibility are visible.</li>
+          <li>[ ] High-impact actions require explicit confirmation.</li>
+          <li>[ ] Humans can approve, reject with a reason, or request more evidence.</li>
+          <li>[ ] The demo records decisions in a local audit timeline.</li>
+          <li>[ ] The prototype is usable by keyboard and screen-reader users.</li>
+          <li>[ ] The prototype clearly states that it uses illustrative data.</li>
+        </ul>
+      </section>
+
+      <section id="back-to-demo">
+        <h2>14. Back to the interactive prototype</h2>
+        <p>
+          <a class="btn btn-primary" href="index.html">Open the interactive prototype</a>
+        </p>
+        <p>
+          The demo dashboard is where you can approve, reject, and request more evidence on the five
+          sample cards, watch the counts update, and read the simulated audit trail.
+        </p>
+      </section>
+    </article>
+
+    <footer class="page-foot">
+      <p>Ziki Human Approval Cards — product-concept prototype. All names, issue IDs, evidence, and outcomes are illustrative and not connected to Ziki production systems.</p>
+    </footer>
+  </main>
+</body>
+</html>
