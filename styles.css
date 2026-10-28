@@ -1008,3 +1008,28 @@ textarea:focus-visible {
     padding: 16px 14px;
   }
 }
+
+
+/* ---- Simplification pass: collapsed history ---- */
+.timeline details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 8px 0;
+}
+.timeline details[open] > summary {
+  margin-bottom: 8px;
+}
+
+.fold {
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+}
+.fold > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+}
+.fold[open] > summary {
+  margin-bottom: 8px;
+}

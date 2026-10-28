@@ -278,6 +278,13 @@ function makeBlock(title, nodes) {
   return block;
 }
 
+function makeFold(title, nodes) {
+  const fold = makeElement('details', 'fold');
+  fold.appendChild(makeElement('summary', null, title));
+  nodes.forEach(function (node) { fold.appendChild(node); });
+  return fold;
+}
+
 function makeEvidenceList(items) {
   const list = makeElement('ul', 'evidence-list');
   items.forEach(function (item) {
@@ -363,45 +370,19 @@ function buildCard(card) {
   head.appendChild(makeElement('span', statusBadgeClass(card.status), STATUS_LABELS[card.status]));
   article.appendChild(head);
 
-  /* Issue */
-  const issueLine = makeElement('p', 'issue-line');
-  issueLine.appendChild(makeElement('span', 'issue-id', card.issue));
-  issueLine.appendChild(makeElement('span', 'issue-title', card.issueTitle));
-  article.appendChild(issueLine);
-
   /* Proposed action */
   article.appendChild(makeElement('h3', 'action-title', card.action));
 
-  /* Badges: risk, blocking, reversibility, time */
-  const badges = makeElement('div', 'badge-row');
-  badges.appendChild(makeElement('span', 'badge ' + riskClass(card.risk), 'Risk: ' + card.risk));
-  badges.appendChild(makeElement(
-    'span',
-    'badge ' + (card.blocking ? 'meta-blocking' : 'meta-neutral'),
-    card.blocking ? 'Blocking' : 'Non-blocking'
-  ));
-  badges.appendChild(makeElement('span', 'badge meta-neutral', card.reversibility));
-  badges.appendChild(makeElement('span', 'badge meta-neutral', card.timestamp));
-  article.appendChild(badges);
-
-  /* Concise reason */
+  /* One-line reason */
   article.appendChild(makeElement('p', 'card-reason', card.reason));
 
-  /* Required permission + expected impact */
-  const meta = makeElement('dl', 'card-meta');
-  const permRow = makeElement('div');
-  permRow.appendChild(makeElement('dt', null, 'Required permission:'));
-  permRow.appendChild(makeElement('dd', null, card.permission));
-  meta.appendChild(permRow);
-  const impactRow = makeElement('div');
-  impactRow.appendChild(makeElement('dt', null, 'Expected impact:'));
-  impactRow.appendChild(makeElement('dd', null, card.impact));
-  meta.appendChild(impactRow);
-  article.appendChild(meta);
-
-  /* Evidence summary */
-  article.appendChild(makeElement('p', 'card-sublabel', 'Evidence summary'));
-  article.appendChild(makeEvidenceList(card.evidence));
+  /* Only the two things a first-timer needs at a glance */
+  const badges = makeElement('div', 'badge-row');
+  badges.appendChild(makeElement('span', 'badge ' + riskClass(card.risk), 'Risk: ' + card.risk));
+  if (card.blocking) {
+    badges.appendChild(makeElement('span', 'badge meta-blocking', 'Blocking'));
+  }
+  article.appendChild(badges);
 
   /* Rejection reason (user-entered, always set through textContent) */
   const reasonBox = makeElement('p', 'rejection-reason');
@@ -432,7 +413,7 @@ function buildCard(card) {
       openModal('reject', card.id, false);
     }));
   }
-  actions.appendChild(makeButton('Details', 'btn-link', function () {
+  actions.appendChild(makeButton('Learn more', 'btn-link', function () {
     openModal('detail', card.id, false);
   }));
   article.appendChild(actions);
@@ -638,10 +619,9 @@ function renderApproveModal(card) {
   const body = byId('modal-body');
   body.appendChild(makeElement('p', 'notice', DEMO_NOTICE));
 
-  body.appendChild(makeBlock('Exact payload', [makePayloadPre(card.payload)]));
-  body.appendChild(makeBlock('Evidence', [makeEvidenceList(card.evidence)]));
-  body.appendChild(makeBlock('Expected impact', [makeElement('p', null, card.impact)]));
-  body.appendChild(makeBlock('Permission check', [makeElement('p', null, card.permissionCheck)]));
+  body.appendChild(makeBlock('What happens if you approve', [makeElement('p', null, card.impact)]));
+  body.appendChild(makeFold('Exact data that will be sent', [makePayloadPre(card.payload)]));
+  body.appendChild(makeFold('What it found', [makeEvidenceList(card.evidence)]));
 
   addFooterButton('Cancel', 'btn btn-secondary', function () {
     if (state.modal && state.modal.fromDetail) {
@@ -723,12 +703,13 @@ function renderDetailModal(card) {
     body.appendChild(makeElement('p', 'warning', '⚠ ' + card.warning));
   }
 
-  body.appendChild(makeBlock('Evidence', [makeEvidenceList(card.evidence)]));
-  body.appendChild(makeBlock('Proposed payload', [makePayloadPre(card.payload)]));
-  body.appendChild(makeBlock('Permission check', [makeElement('p', null, card.permissionCheck)]));
-  body.appendChild(makeBlock('Risk', [makeElement('p', null, card.riskNote)]));
-  body.appendChild(makeBlock('Reversibility', [makeElement('p', null, card.reversibilityNote)]));
-  body.appendChild(makeBlock('Expected impact', [makeElement('p', null, card.impact)]));
+  body.appendChild(makeBlock('Why the agent suggests this', [makeElement('p', null, card.reason)]));
+  body.appendChild(makeBlock('What it found', [makeEvidenceList(card.evidence)]));
+  body.appendChild(makeBlock('What happens if you approve', [makeElement('p', null, card.impact)]));
+  body.appendChild(makeFold('Can this be undone?', [makeElement('p', null, card.reversibilityNote)]));
+  body.appendChild(makeFold('How risky is it?', [makeElement('p', null, card.riskNote)]));
+  body.appendChild(makeFold('Is the agent allowed to do this?', [makeElement('p', null, card.permissionCheck)]));
+  body.appendChild(makeFold('Exact data that will be sent', [makePayloadPre(card.payload)]));
 
   if (card.status === 'rejected') {
     const reasonBox = makeElement('p', 'rejection-reason',

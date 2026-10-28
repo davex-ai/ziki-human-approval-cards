@@ -32,9 +32,9 @@ preferred (it behaves exactly like the eventual hosted version).
 ## How to use the demo
 
 1. The dashboard opens with **five cards**, four of them waiting for a decision and two of them
-   blocking. The summary shows the pending and blocking counts.
-2. Use the filter row — `All`, `Blocking`, `Low risk`, `Approved`, `Rejected` — to narrow the
-   list. The visible count updates after every filter or state change.
+   blocking. Each card shows only who, what, why (one line), and risk.
+2. Use `All` / `Blocking` to narrow the list. Click **Learn more** on any card for evidence,
+   impact, reversibility, permission and the exact data — each one a click away.
 3. On a low- or medium-risk card, press the primary button (for example **Approve validation**).
    A confirmation dialog shows the exact payload, the evidence, the impact, and a notice that the
    demo does not call Ziki. Only **Confirm approval** applies the decision.

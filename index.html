@@ -38,13 +38,8 @@
         </p>
       </div>
       <div class="summary-side">
-        <p class="summary-text">
-          The cards below are proposed agent actions awaiting human review.
-          Each card shows the agent, the exact payload, the evidence behind it, and
-          what happens if you approve.
-        </p>
-        <p class="summary-note">Demo only — approving, rejecting, or requesting evidence is simulated locally.</p>
-        <p class="summary-link"><a href="proposal.html">Read the proposal</a></p>
+        <p class="summary-text">Agents propose actions. You decide what goes ahead.</p>
+        <p class="summary-link"><a href="proposal.html">How this works</a></p>
       </div>
     </section>
 
@@ -53,9 +48,6 @@
       <div class="filter-row" role="group" aria-label="Filter cards by status or risk">
         <button type="button" class="filter-btn is-active" data-filter="all" aria-pressed="true">All</button>
         <button type="button" class="filter-btn" data-filter="blocking" aria-pressed="false">Blocking</button>
-        <button type="button" class="filter-btn" data-filter="low" aria-pressed="false">Low risk</button>
-        <button type="button" class="filter-btn" data-filter="approved" aria-pressed="false">Approved</button>
-        <button type="button" class="filter-btn" data-filter="rejected" aria-pressed="false">Rejected</button>
       </div>
       <p class="visible-count" id="visible-count">Showing 5 of 5 cards</p>
     </section>
@@ -71,13 +63,14 @@
 
     <!-- Audit timeline -->
     <section class="timeline" aria-labelledby="timeline-title">
-      <h2 id="timeline-title">Demo audit trail — simulated locally; no Ziki request is sent.</h2>
-      <ol class="timeline-list" id="timeline-list"></ol>
+      <details>
+        <summary id="timeline-title">See activity history</summary>
+        <ol class="timeline-list" id="timeline-list"></ol>
+      </details>
     </section>
 
     <footer class="page-foot">
-      <p>Ziki Human Approval Cards — product-concept prototype. All names, issue IDs, evidence, and outcomes are illustrative.</p>
-      <p><a href="proposal.html">Read the proposal</a></p>
+      <p>Prototype with sample data. Nothing here connects to Ziki.</p>
     </footer>
   </main>
 
